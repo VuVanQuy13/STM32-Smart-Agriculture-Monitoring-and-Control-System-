@@ -1,0 +1,21 @@
+{
+    "configurations": [
+        {
+            "name": "STM32F103C8T6",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/Driver/Inc",
+                "${workspaceFolder}/App/Inc",
+                "${workspaceFolder}/Core",
+                "${workspaceFolder}/Startup"
+            ],
+            "defines": [
+                "STM32F103xB"
+            ],
+            "cStandard": "gnu11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "gcc-arm"
+        }
+    ],
+    "version": 4
+}

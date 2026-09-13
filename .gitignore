@@ -1,0 +1,22 @@
+# Generated firmware and host-test artifacts
+/Output/
+*.o
+*.d
+*.elf
+*.hex
+*.bin
+*.map
+*.exe
+*.log
+
+# Local agent context and historical review material
+/docs/context.md
+/docs/codebase-map.md
+/docs/review_*/
+
+# Local editor/OS temporary files
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
