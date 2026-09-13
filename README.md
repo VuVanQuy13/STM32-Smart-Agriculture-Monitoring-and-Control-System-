@@ -1,59 +1,49 @@
-# STM32 Smart Agriculture Monitoring and Control System
+﻿# Hệ thống giám sát và điều khiển nông nghiệp STM32
 
-Bare-metal C firmware for STM32F103 with an 8 MHz external crystal and a 72 MHz
-system clock. Uses register-level drivers, custom startup code and a linker
-script, without HAL or an RTOS.
+Project sử dụng STM32 để theo dõi nhiệt độ, độ ẩm không khí, độ ẩm đất và ánh sáng,
+đồng thời điều khiển bơm, đèn và quạt. Firmware viết bằng C bare-metal, thao tác
+trực tiếp thanh ghi, không dùng HAL hoặc RTOS.
 
-## Functionality
+## Chức năng
 
-- DHT11 temperature/humidity and ADC soil/light acquisition every ten seconds.
-- Two 16x2 I2C LCDs for readings and editable thresholds.
-- Debounced buttons and Auto/Manual pump, light and fan relay control.
-- Threshold persistence using two Flash pages, CRC and commit verification.
-- Sensor error/age checks, communication timeouts and a RAM fault log.
+- Đọc dữ liệu cảm biến mỗi 10 giây và hiển thị trên LCD.
+- Tự động điều khiển bơm, đèn, quạt theo ngưỡng cài đặt.
+- Chuyển sang chế độ Manual để bật/tắt từng thiết bị bằng nút nhấn.
+- Chỉnh ngưỡng, lưu cấu hình vào Flash và khôi phục ngưỡng mặc định.
 
-## Layout
+## MCU, cảm biến và thiết bị
 
-| Path | Purpose |
+| Thành phần | Vai trò |
 | --- | --- |
-| Core/main.c | Firmware application entry point |
-| Core/Test.cpp | Historical Arduino reference, not built or authoritative wiring |
-| App/ | Sensor, display, button, relay and configuration logic |
-| Driver/ | Register definitions and peripheral drivers |
-| Startup/, Linker/ | Reset/vector table and memory layout |
-| Tests/ | Deterministic host tests and build/linker checks |
-| Tools/ | Build configuration tracking helper |
+| STM32F103C8T6 — ARM Cortex-M3 | MCU điều khiển, clock 72 MHz từ thạch anh ngoài 8 MHz |
+| DHT11 | Đo nhiệt độ và độ ẩm không khí |
+| Cảm biến độ ẩm đất ngõ ra analog | Đọc tín hiệu đất qua ADC |
+| Cảm biến ánh sáng ngõ ra analog | Đọc mức ánh sáng qua ADC |
+| Hai LCD 16×2 giao tiếp I2C | Hiển thị số đo và ngưỡng cài đặt |
+| Ba relay | Điều khiển bơm, đèn và quạt |
+| Nút nhấn và LED | Thay đổi cài đặt, điều khiển thủ công và báo trạng thái |
 
-## Build and Test
+Giá trị đất và ánh sáng hiển thị theo tỷ lệ toàn thang ADC, chưa hiệu chuẩn
+thành độ ẩm đất hoặc độ rọi thực tế.
 
-The current build scripts require Windows PowerShell, GNU Make and GNU Arm GCC.
-Host tests additionally require a native `gcc` on PATH. Run from this directory:
+## Ngoại vi MCU sử dụng
+
+- **RCC:** cấu hình clock hệ thống và cấp clock cho ngoại vi.
+- **GPIO, AFIO, EXTI:** kết nối cảm biến, relay, LED và xử lý nút nhấn.
+- **ADC1:** đọc cảm biến ánh sáng tại PA5 và cảm biến đất tại PA6.
+- **I2C1:** giao tiếp hai LCD tại địa chỉ `0x27` và `0x26`, dùng PB6/PB7.
+- **TIM2, TIM3, TIM4 và SysTick:** tạo thời gian chờ, lên lịch lấy mẫu, đo xung DHT11 và chống dội nút.
+- **Flash nội:** lưu ngưỡng cài đặt để sử dụng sau khi khởi động lại.
+
+## Cách build
+
+Yêu cầu **Windows PowerShell**, **GNU Make** và **GNU Arm GCC**.
+Chạy tại thư mục gốc của project:
 
 ```powershell
-make build GCC_DIR=C:/path/to/arm-toolchain
-powershell -NoProfile -ExecutionPolicy Bypass -File Tests/run.ps1 -Optimization -O0
-powershell -NoProfile -ExecutionPolicy Bypass -File Tests/run.ps1 -Optimization -O2
+make build GCC_DIR=C:/Toolchains/arm-gnu-toolchain
 ```
 
-`GCC_DIR` must contain `bin/arm-none-eabi-gcc` and `bin/arm-none-eabi-objcopy`.
-The default compiler path in Makefile is local to the original development PC.
-Firmware output is `Output/makefile.hex`; `Output/` is generated and ignored.
-Use `OPT=-O2 OUTPUT_DIR=Output/optimized` for an optimized variant.
-`Tests/check_build.ps1` uses the default Makefile toolchain configuration;
-`Tests/check_linker.ps1` also has a local compiler path to adjust on another PC.
-
-## Hardware and Limits
-
-- DHT11: PA0; light ADC: PA5; soil ADC: PA6.
-- Active-high relays: PA2 pump, PA3 light, PA4 fan.
-- I2C1: PB6 SCL, PB7 SDA; LCD addresses 0x27 and 0x26.
-- Actual button mapping is in App/Src/button.c; SWD remains enabled, JTAG is disabled.
-- Flash layout targets 64 KB: 62 KB application plus 2 KB configuration; RAM is 20 KB.
-- Low soil ADC means low displayed percentage and requests watering. Percentages
-  are ADC full-scale ratios, not calibrated physical moisture measurements.
-- The firmware has no independent pump maximum-run protection or watchdog recovery.
-  A plausible but incorrect low soil reading can keep the pump on. Manual mode
-  leaves output control with the user. LCD errors latch until reboot; LCD2 errors
-  disable threshold editing. Millisecond timing can undercount during blocked IRQs.
-- Host tests do not replace board validation of wiring, DHT timing, power loss,
-  sensor calibration and relay-load interference. Validate before unattended use.
+Thay `GCC_DIR` bằng thư mục toolchain trên máy, chứa
+`bin/arm-none-eabi-gcc` và `bin/arm-none-eabi-objcopy`; dùng đường dẫn không có
+khoảng trắng. File firmware được tạo tại **`Output/makefile.hex`**.
