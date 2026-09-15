@@ -35,6 +35,14 @@ than calibrated measurements of physical soil moisture or illuminance.
 - **TIM2, TIM3, TIM4 and SysTick:** generate delays, schedule sampling, measure DHT11 pulses and debounce buttons.
 - **Internal Flash:** preserve configured thresholds across restarts.
 
+## Circuit Schematic
+
+![Circuit schematic](https://github.com/user-attachments/assets/fba3842c-e7d0-4d2a-ae84-66889b4d4f94)
+
+## PCB Layout
+
+![PCB layout](https://github.com/user-attachments/assets/91b17522-d36f-44c0-847f-05722fea052f)
+
 ## Build
 
 Requirements: **Windows PowerShell**, **GNU Make** and **GNU Arm GCC**.
